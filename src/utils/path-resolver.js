@@ -32,15 +32,32 @@ export function getAntigravityChatPath() {
 
 export function getVSCodePath() {
     if (os.platform() === 'win32') {
+        const candidateRoots = [
+            process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'Programs', 'Microsoft VS Code') : null,
+            process.env.ProgramFiles ? path.join(process.env.ProgramFiles, 'Microsoft VS Code') : 'C:\\Program Files\\Microsoft VS Code',
+            process.env['ProgramFiles(x86)'] ? path.join(process.env['ProgramFiles(x86)'], 'Microsoft VS Code') : null
+        ].filter(Boolean);
+
+        for (const root of candidateRoots) {
+            if (!fs.existsSync(root)) continue;
+            const direct = path.join(root, 'resources', 'app');
+            if (fs.existsSync(direct)) return direct;
+
+            try {
+                const entries = fs.readdirSync(root, { withFileTypes: true });
+                for (const entry of entries) {
+                    if (entry.isDirectory() && entry.name !== 'bin') {
+                        const subApp = path.join(root, entry.name, 'resources', 'app');
+                        if (fs.existsSync(subApp) && fs.existsSync(path.join(subApp, 'out'))) {
+                            return subApp;
+                        }
+                    }
+                }
+            } catch (e) { }
+        }
+
         const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
-        const userInstall = path.join(localAppData, 'Programs', 'Microsoft VS Code', 'resources', 'app');
-        if (fs.existsSync(userInstall)) return userInstall;
-
-        const programFiles = process.env.ProgramFiles || 'C:\\Program Files';
-        const systemInstall = path.join(programFiles, 'Microsoft VS Code', 'resources', 'app');
-        if (fs.existsSync(systemInstall)) return systemInstall;
-
-        return userInstall;
+        return path.join(localAppData, 'Programs', 'Microsoft VS Code', 'resources', 'app');
     }
     if (os.platform() === 'darwin') {
         return '/Applications/Visual Studio Code.app/Contents/Resources/app';
@@ -49,6 +66,7 @@ export function getVSCodePath() {
     if (fs.existsSync(linuxDefault)) return linuxDefault;
     return path.join(os.homedir(), '.local', 'share', 'code', 'resources', 'app');
 }
+
 
 export function getVSCodeExtensionsDir() {
     return path.join(os.homedir(), '.vscode', 'extensions');
