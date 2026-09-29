@@ -164,44 +164,38 @@ async function patchAntigravityIDE(idePath) {
 }
 
 async function patchVSCodeTarget(vscodePath) {
-    const spinner = ora('Checking VS Code...').start();
-
-    if (!fs.existsSync(vscodePath)) {
-        spinner.fail(`VS Code path not found: ${vscodePath}`);
-        return false;
-    }
-
-    const workbenchDir = path.join(vscodePath, 'out', 'vs', 'code', 'electron-browser', 'workbench');
-    if (!checkPermissions(workbenchDir)) {
-        spinner.fail('Permission Denied.');
-        console.error(red('\nPlease run this terminal as Administrator (or with sudo).\n'));
-        return false;
-    }
+    const spinner = ora('Checking VS Code & Extensions...').start();
 
     if (isRestore) {
-        spinner.text = 'Restoring VS Code backup...';
+        spinner.text = 'Restoring VS Code & Extensions backup...';
         try {
-            restoreVSCode(vscodePath);
-            spinner.succeed('Successfully restored original VS Code!');
+            const restored = restoreVSCode(vscodePath);
+            spinner.succeed('Successfully restored original VS Code & Extensions!');
+            if (restored.length > 0) {
+                console.log(cyan('\n  Restored Extensions: ' + restored.join(', ')));
+            }
             console.log(green('✨ Please restart VS Code to apply changes.\n'));
             return true;
         } catch (e) {
-            spinner.fail('Failed to restore VS Code: ' + e.message);
+            spinner.fail('Failed to restore: ' + e.message);
             return false;
         }
     }
 
-    spinner.text = 'Deploying Smart RTL to VS Code...';
+    spinner.text = 'Deploying Smart RTL to VS Code & AI Extensions...';
     try {
-        patchVSCode(vscodePath, vscodePayloadPath, fontSourcePath);
-        spinner.succeed('Successfully patched VS Code!');
-        console.log(green('\n✨ Smart RTL is now active in VS Code!'));
-        console.log(cyan('  • Cline Extension (Webviews & prompts)'));
-        console.log(cyan('  • Continue Extension (Chat & inline suggestions)'));
-        console.log(cyan('  • Roo Code Extension (Chat panels)'));
-        console.log(cyan('  • Antigravity Extension'));
-        console.log(cyan('  • Auto-recalculated checksums (No corruption warning)'));
-        console.log(yellow('🔄 Please restart VS Code to apply the changes.\n'));
+        const result = patchVSCode(vscodePath, vscodePayloadPath, fontSourcePath);
+        spinner.succeed('Successfully patched VS Code & Extensions!');
+        console.log(green('\n✨ Smart RTL is now active in:'));
+        if (result.extensions && result.extensions.length > 0) {
+            result.extensions.forEach(name => {
+                console.log(cyan(`  • ${name}`));
+            });
+        }
+        if (result.workbench) {
+            console.log(cyan('  • VS Code Workbench (Tabs, inputs, dialogs)'));
+        }
+        console.log(yellow('🔄 Please close and reopen the extension tab or restart VS Code.\n'));
         return true;
     } catch (e) {
         spinner.fail('Failed to patch VS Code: ' + e.message);
