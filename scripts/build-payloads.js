@@ -446,12 +446,23 @@ function buildClientPayload(options = {}) {
         const style = doc.createElement('style');
         style.id = 'smart-rtl-widget-style';
         style.textContent = \`
+            /* Enable Titlebar Overflow for Dropdown */
+            .monaco-workbench .part.titlebar,
+            .monaco-workbench .part.titlebar > .titlebar-container,
+            .monaco-workbench .part.titlebar .titlebar-right {
+                overflow: visible !important;
+            }
+
             .rtl-header-wrap {
                 position: relative !important;
                 display: inline-flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                z-index: 100 !important;
+                height: 100% !important;
+                margin: 0 4px !important;
+                -webkit-app-region: no-drag !important;
+                app-region: no-drag !important;
+                z-index: 10000 !important;
                 user-select: none !important;
             }
             .rtl-header-button {
@@ -469,43 +480,39 @@ function buildClientPayload(options = {}) {
                 border: none !important;
                 padding: 0 !important;
                 margin: 0 !important;
-                color: var(--vscode-icon-foreground, #cccccc) !important;
+                color: var(--vscode-titleBar-activeForeground, var(--vscode-icon-foreground, #cccccc)) !important;
                 opacity: 0.85 !important;
-                transition: opacity 0.15s ease, color 0.15s ease, background-color 0.15s ease !important;
+                -webkit-app-region: no-drag !important;
+                app-region: no-drag !important;
+                pointer-events: auto !important;
+                transition: all 0.15s ease !important;
             }
             .rtl-header-button:hover {
                 opacity: 1 !important;
-                color: var(--vscode-foreground, #ffffff) !important;
+                color: var(--vscode-titleBar-activeForeground, #ffffff) !important;
                 background-color: var(--vscode-toolbar-hoverBackground, rgba(90, 93, 94, 0.31)) !important;
             }
             .rtl-header-button.rtl-active {
                 opacity: 1 !important;
-                color: var(--vscode-button-background, #3b82f6) !important;
+                background-color: var(--vscode-button-background, #007acc) !important;
+                color: #ffffff !important;
+                box-shadow: 0 0 6px rgba(0, 122, 204, 0.4) !important;
+            }
+            .rtl-header-button.rtl-active:hover {
+                background-color: var(--vscode-button-hoverBackground, #0062a3) !important;
+                color: #ffffff !important;
             }
             .rtl-header-button svg {
-                width: 16px !important;
-                height: 16px !important;
+                width: 15px !important;
+                height: 15px !important;
                 stroke: currentColor !important;
                 fill: none !important;
             }
             .rtl-status-dot {
-                position: absolute !important;
-                bottom: 2px !important;
-                right: 2px !important;
-                width: 5px !important;
-                height: 5px !important;
-                border-radius: 50% !important;
-                background-color: #22c55e !important;
-                opacity: 0;
-                transition: opacity 0.2s ease !important;
-            }
-            .rtl-header-button.rtl-active .rtl-status-dot {
-                opacity: 1 !important;
+                display: none !important;
             }
             .rtl-dropdown-panel {
-                position: absolute !important;
-                top: calc(100% + 6px) !important;
-                right: 0 !important;
+                position: fixed !important;
                 width: 260px !important;
                 background-color: var(--vscode-menu-background, var(--vscode-sideBar-background, #18181b)) !important;
                 color: var(--vscode-foreground, #f4f4f5) !important;
@@ -524,7 +531,9 @@ function buildClientPayload(options = {}) {
                 display: flex !important;
                 flex-direction: column !important;
                 gap: 7px !important;
-                z-index: 100000 !important;
+                z-index: 2147483647 !important;
+                -webkit-app-region: no-drag !important;
+                app-region: no-drag !important;
             }
             .rtl-dropdown-panel.rtl-open {
                 transform: scale(1) translateY(0) !important;
@@ -984,9 +993,24 @@ function buildClientPayload(options = {}) {
         const fsInput = wrapper.querySelector('#rtl-fs-input');
         const fsResetBtn = wrapper.querySelector('#rtl-fs-reset');
 
+        function updatePanelPosition() {
+            if (!panel || !btn) return;
+            const rect = btn.getBoundingClientRect();
+            panel.style.top = Math.round(rect.bottom + 4) + 'px';
+            panel.style.right = Math.max(8, Math.round(window.innerWidth - rect.right)) + 'px';
+            panel.style.left = 'auto';
+        }
+
         btn?.addEventListener('click', (e) => {
             e.stopPropagation();
+            updatePanelPosition();
             panel?.classList.toggle('rtl-open');
+        });
+
+        window.addEventListener('resize', () => {
+            if (panel?.classList.contains('rtl-open')) {
+                updatePanelPosition();
+            }
         });
 
         document.addEventListener('click', (e) => {
@@ -1089,13 +1113,35 @@ function buildClientPayload(options = {}) {
         const widget = buildWidget();
         if (!widget) return;
 
-        // Stage 1: Try specific header buttons (e.g. Antigravity + icon)
-        const specificAnchor = document.querySelector('[data-tooltip-id="new-conversation-tooltip"], [data-past-conversations-toggle="true"]');
-        if (specificAnchor && specificAnchor.parentElement) {
-            if (widget.parentElement !== specificAnchor.parentElement || widget.nextElementSibling !== specificAnchor) {
+        // Stage 1: VS Code & Antigravity IDE Title Bar (Right section, beside Layout Controls)
+        const titlebarRight = document.querySelector(
+            '.part.titlebar .titlebar-right, #workbench\\.parts\\.titlebar .titlebar-right, .titlebar-container .titlebar-right, .titlebar-right'
+        );
+        if (titlebarRight) {
+            const actionToolbar = titlebarRight.querySelector('.action-toolbar-container, .monaco-toolbar');
+            if (actionToolbar) {
+                if (widget.parentElement !== titlebarRight || widget.nextElementSibling !== actionToolbar) {
+                    widget.classList.remove('rtl-floating');
+                    titlebarRight.insertBefore(widget, actionToolbar);
+                    currentLocation = 'titlebar';
+                }
+                return;
+            }
+
+            const windowControls = titlebarRight.querySelector('.window-controls-container');
+            if (windowControls) {
+                if (widget.parentElement !== titlebarRight || widget.nextElementSibling !== windowControls) {
+                    widget.classList.remove('rtl-floating');
+                    titlebarRight.insertBefore(widget, windowControls);
+                    currentLocation = 'titlebar';
+                }
+                return;
+            }
+
+            if (widget.parentElement !== titlebarRight) {
                 widget.classList.remove('rtl-floating');
-                specificAnchor.parentElement.insertBefore(widget, specificAnchor);
-                currentLocation = 'header';
+                titlebarRight.prepend(widget);
+                currentLocation = 'titlebar';
             }
             return;
         }
@@ -1186,7 +1232,7 @@ function buildClientPayload(options = {}) {
 
         // Low-frequency safety net (every 3 seconds instead of 500ms)
         setInterval(() => {
-            if (!widgetWrapper || !document.body.contains(widgetWrapper)) {
+            if (!widgetWrapper || !document.body.contains(widgetWrapper) || currentLocation !== 'titlebar') {
                 attachWidget();
             }
             cascadeToFrames();

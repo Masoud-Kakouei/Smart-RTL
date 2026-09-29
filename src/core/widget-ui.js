@@ -41,17 +41,28 @@ export function injectWidgetStyles(doc = document) {
   const style = doc.createElement("style");
   style.id = "smart-rtl-widget-style";
   style.textContent = `
+        /* Enable Titlebar Overflow for Dropdown */
+        .monaco-workbench .part.titlebar,
+        .monaco-workbench .part.titlebar > .titlebar-container,
+        .monaco-workbench .part.titlebar .titlebar-right {
+            overflow: visible !important;
+        }
+
         /* RTL Header Button Wrapper */
         .rtl-header-wrap {
             position: relative !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            z-index: 100 !important;
+            height: 100% !important;
+            margin: 0 4px !important;
+            -webkit-app-region: no-drag !important;
+            app-region: no-drag !important;
+            z-index: 10000 !important;
             user-select: none !important;
         }
 
-        /* RTL Header Button (Harmonized with toolbar icons) */
+        /* RTL Header Button (Harmonized with titlebar & toolbar icons) */
         .rtl-header-button {
             position: relative !important;
             display: inline-flex !important;
@@ -67,47 +78,43 @@ export function injectWidgetStyles(doc = document) {
             border: none !important;
             padding: 0 !important;
             margin: 0 !important;
-            color: var(--vscode-icon-foreground, #cccccc) !important;
+            color: var(--vscode-titleBar-activeForeground, var(--vscode-icon-foreground, #cccccc)) !important;
             opacity: 0.85 !important;
-            transition: opacity 0.15s ease, color 0.15s ease, background-color 0.15s ease !important;
+            -webkit-app-region: no-drag !important;
+            app-region: no-drag !important;
+            pointer-events: auto !important;
+            transition: all 0.15s ease !important;
         }
         .rtl-header-button:hover {
             opacity: 1 !important;
-            color: var(--vscode-foreground, #ffffff) !important;
+            color: var(--vscode-titleBar-activeForeground, #ffffff) !important;
             background-color: var(--vscode-toolbar-hoverBackground, rgba(90, 93, 94, 0.31)) !important;
         }
         .rtl-header-button.rtl-active {
             opacity: 1 !important;
-            color: var(--vscode-button-background, #3b82f6) !important;
+            background-color: var(--vscode-button-background, #007acc) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 6px rgba(0, 122, 204, 0.4) !important;
+        }
+        .rtl-header-button.rtl-active:hover {
+            background-color: var(--vscode-button-hoverBackground, #0062a3) !important;
+            color: #ffffff !important;
         }
         .rtl-header-button svg {
-            width: 16px !important;
-            height: 16px !important;
+            width: 15px !important;
+            height: 15px !important;
             stroke: currentColor !important;
             fill: none !important;
         }
 
         /* Status Indicator Dot */
         .rtl-status-dot {
-            position: absolute !important;
-            bottom: 2px !important;
-            right: 2px !important;
-            width: 5px !important;
-            height: 5px !important;
-            border-radius: 50% !important;
-            background-color: #22c55e !important;
-            opacity: 0;
-            transition: opacity 0.2s ease !important;
-        }
-        .rtl-header-button.rtl-active .rtl-status-dot {
-            opacity: 1 !important;
+            display: none !important;
         }
 
-        /* Settings Dropdown Panel */
+        /* Settings Dropdown Panel (Fixed to float safely over titlebar and editors) */
         .rtl-dropdown-panel {
-            position: absolute !important;
-            top: calc(100% + 6px) !important;
-            right: 0 !important;
+            position: fixed !important;
             width: 260px !important;
             background-color: var(--vscode-menu-background, var(--vscode-sideBar-background, #18181b)) !important;
             color: var(--vscode-foreground, #f4f4f5) !important;
@@ -126,7 +133,9 @@ export function injectWidgetStyles(doc = document) {
             display: flex !important;
             flex-direction: column !important;
             gap: 7px !important;
-            z-index: 100000 !important;
+            z-index: 2147483647 !important;
+            -webkit-app-region: no-drag !important;
+            app-region: no-drag !important;
         }
         .rtl-dropdown-panel.rtl-open {
             transform: scale(1) translateY(0) !important;
@@ -460,10 +469,25 @@ export function buildWidgetElement(config, callbacks = {}) {
   const fsInput = wrapper.querySelector("#rtl-fs-input");
   const fsResetBtn = wrapper.querySelector("#rtl-fs-reset");
 
+  const updatePanelPosition = () => {
+    if (!panel || !btn) return;
+    const rect = btn.getBoundingClientRect();
+    panel.style.top = Math.round(rect.bottom + 4) + "px";
+    panel.style.right = Math.max(8, Math.round(window.innerWidth - rect.right)) + "px";
+    panel.style.left = "auto";
+  };
+
   // Toggle panel visibility
   btn?.addEventListener("click", (e) => {
     e.stopPropagation();
+    updatePanelPosition();
     panel?.classList.toggle("rtl-open");
+  });
+
+  window.addEventListener("resize", () => {
+    if (panel?.classList.contains("rtl-open")) {
+      updatePanelPosition();
+    }
   });
 
   // Close on outside click

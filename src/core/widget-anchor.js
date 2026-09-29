@@ -12,14 +12,22 @@ export class WidgetAnchor {
     }
 
     /**
-     * Stage 1: Adapter-specific header toolbar anchor
-     * Stage 2: Generic VS Code / Electron action bar
-     * Stage 3: Fixed floating button in bottom-right corner
+     * Stage 1: VS Code & Antigravity IDE Title Bar (Top right beside layout controls)
+     * Stage 2: Adapter-specific header toolbar anchor
+     * Stage 3: Generic VS Code / Electron action bar
+     * Stage 4: Fixed floating button in bottom-right corner
      */
     attach() {
         if (!this.widget) return;
 
-        // Stage 1: Try adapter-specific anchor
+        // Stage 1: Try Title Bar (Top of IDE beside Layout Controls)
+        const titlebarAnchor = this._findTitleBarAnchor();
+        if (titlebarAnchor) {
+            this._insertNearTitlebar(titlebarAnchor);
+            return;
+        }
+
+        // Stage 2: Try adapter-specific anchor
         const primarySelector = this.adapter?.getToggleAnchorSelector();
         if (primarySelector) {
             const anchor = document.querySelector(primarySelector);
@@ -29,15 +37,60 @@ export class WidgetAnchor {
             }
         }
 
-        // Stage 2: Try universal VS Code action bars
+        // Stage 3: Try universal VS Code action bars
         const actionBar = this._findActionBar();
         if (actionBar) {
             this._insertInto(actionBar);
             return;
         }
 
-        // Stage 3: Floating corner fallback
+        // Stage 4: Floating corner fallback
         this._floatInCorner();
+    }
+
+    _findTitleBarAnchor() {
+        const titlebarRight = document.querySelector(
+            '.part.titlebar .titlebar-right, #workbench\\.parts\\.titlebar .titlebar-right, .titlebar-container .titlebar-right, .titlebar-right'
+        );
+        if (!titlebarRight) return null;
+
+        // Position immediately before layout controls (.action-toolbar-container)
+        const actionToolbar = titlebarRight.querySelector('.action-toolbar-container, .monaco-toolbar');
+        if (actionToolbar) {
+            return { container: titlebarRight, before: actionToolbar };
+        }
+
+        // Fallback: Position before window controls (minimize/maximize/close)
+        const windowControls = titlebarRight.querySelector('.window-controls-container');
+        if (windowControls) {
+            return { container: titlebarRight, before: windowControls };
+        }
+
+        return { container: titlebarRight, before: null };
+    }
+
+    _insertNearTitlebar(anchorInfo) {
+        const { container, before } = anchorInfo;
+        if (!container) return;
+
+        if (before) {
+            if (this.widget.parentElement === container && this.widget.nextElementSibling === before) {
+                this.currentLocation = 'titlebar';
+                this.widget.classList.remove('rtl-floating');
+                return;
+            }
+            this.widget.classList.remove('rtl-floating');
+            container.insertBefore(this.widget, before);
+        } else {
+            if (this.widget.parentElement === container) {
+                this.currentLocation = 'titlebar';
+                this.widget.classList.remove('rtl-floating');
+                return;
+            }
+            this.widget.classList.remove('rtl-floating');
+            container.prepend(this.widget);
+        }
+        this.currentLocation = 'titlebar';
     }
 
     _findActionBar() {
@@ -117,6 +170,15 @@ export class WidgetAnchor {
         if (!this.widget.parentElement || !document.body.contains(this.widget)) {
             this.attach();
             return;
+        }
+
+        // If not attached to Title Bar, check if Title Bar has appeared
+        if (this.currentLocation !== 'titlebar') {
+            const titlebar = this._findTitleBarAnchor();
+            if (titlebar) {
+                this.attach();
+                return;
+            }
         }
 
         // If currently floating, check if a header or action bar has appeared

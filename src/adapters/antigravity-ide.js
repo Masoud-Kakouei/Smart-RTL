@@ -63,7 +63,7 @@ export class AntigravityIDEAdapter extends BaseAdapter {
     }
 
     getToggleAnchorSelector() {
-        return '[data-tooltip-id="new-conversation-tooltip"], [data-past-conversations-toggle="true"]';
+        return '.part.titlebar .titlebar-right, [data-tooltip-id="new-conversation-tooltip"], [data-past-conversations-toggle="true"]';
     }
 
     getToggleInsertPosition() {
