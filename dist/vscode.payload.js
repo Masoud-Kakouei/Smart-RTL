@@ -238,11 +238,10 @@
             }
 
             .codicon, [class*="codicon-"], [class*="codicon"], .codicon:before, [class*="codicon-"]:before, [class*="codicon"]:before,
-            .monaco-tree-twistie, .monaco-tree-twistie:before, .monaco-icon-label:before, .show-file-icons .file-icon:before {
+            .monaco-tree-twistie, .monaco-tree-twistie:before {
                 font-family: codicon !important;
             }
 
-            .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab,
             .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab .tab-label,
             .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab .label-name,
             .monaco-workbench .part.editor > .content .editor-group-container > .title .title-label,
@@ -580,7 +579,12 @@
                 outline: none !important;
             }
             .rtl-switch.rtl-on {
-                background-color: var(--vscode-button-background, #3b82f6) !important;
+                background-color: #0078d4 !important;
+                box-shadow: 0 0 8px rgba(0, 120, 212, 0.6) !important;
+            }
+            .rtl-switch.rtl-on:hover {
+                background-color: #106ebe !important;
+                box-shadow: 0 0 10px rgba(0, 120, 212, 0.8) !important;
             }
             .rtl-switch-knob {
                 position: absolute !important;

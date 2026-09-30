@@ -212,7 +212,12 @@ export function injectWidgetStyles(doc = document) {
             outline: none !important;
         }
         .rtl-switch.rtl-on {
-            background-color: var(--vscode-button-background, #3b82f6) !important;
+            background-color: #0078d4 !important;
+            box-shadow: 0 0 8px rgba(0, 120, 212, 0.6) !important;
+        }
+        .rtl-switch.rtl-on:hover {
+            background-color: #106ebe !important;
+            box-shadow: 0 0 10px rgba(0, 120, 212, 0.8) !important;
         }
         .rtl-switch-knob {
             position: absolute !important;

@@ -171,21 +171,15 @@ export function generateBiDiCSS(options = {}) {
         [class*="codicon-"]:before,
         [class*="codicon"]:before,
         .monaco-tree-twistie,
-        .monaco-tree-twistie:before,
-        .monaco-icon-label:before,
-        .show-file-icons .file-icon:before {
+        .monaco-tree-twistie:before {
             font-family: codicon !important;
         }
 
         /* Uniform tab typography across all editors and settings */
-        .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab,
         .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab .tab-label,
         .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab .tab-label a,
         .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab .label-name,
         .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab .label-description,
-        .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab .monaco-icon-label,
-        .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab .monaco-icon-name-container,
-        .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab .monaco-icon-description-container,
         .monaco-workbench .part.editor > .content .editor-group-container > .title .title-label,
         .monaco-workbench .part.editor > .content .editor-group-container > .title .title-label a,
         .monaco-workbench .part.editor > .content .editor-group-container > .title .title-label .label-name,
