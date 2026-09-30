@@ -407,7 +407,7 @@
                 unicode-bidi: isolate !important;
             }
 
-            pre, code, pre *, code *, .font-mono, .font-mono *, textarea.font-mono, .monaco-editor, .monaco-editor * {
+            pre, code, pre *, code *, .font-mono, .font-mono *, textarea.font-mono {
                 unicode-bidi: isolate !important;
                 direction: ltr !important;
                 text-align: left !important;
@@ -480,13 +480,19 @@
             }
             .rtl-header-button.rtl-active {
                 opacity: 1 !important;
-                background-color: var(--vscode-button-background, #007acc) !important;
+                background-color: #0078d4 !important;
                 color: #ffffff !important;
-                box-shadow: 0 0 6px rgba(0, 122, 204, 0.4) !important;
+                box-shadow: 0 0 10px rgba(0, 120, 212, 0.7) !important;
             }
             .rtl-header-button.rtl-active:hover {
-                background-color: var(--vscode-button-hoverBackground, #0062a3) !important;
+                background-color: #106ebe !important;
                 color: #ffffff !important;
+                box-shadow: 0 0 12px rgba(0, 120, 212, 0.9) !important;
+            }
+            .rtl-header-button.rtl-active svg {
+                stroke: #ffffff !important;
+                stroke-width: 2.3px !important;
+                filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)) !important;
             }
             .rtl-header-button svg {
                 width: 15px !important;
@@ -999,11 +1005,28 @@
             }
         });
 
-        document.addEventListener('click', (e) => {
-            if (panel?.classList.contains('rtl-open') && !wrapper.contains(e.target)) {
+        const closePanelOnOutside = (e) => {
+            if (!panel || !panel.classList.contains('rtl-open')) return;
+            const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+            if (path.includes(wrapper) || path.includes(panel) || wrapper.contains(e.target) || panel.contains(e.target)) {
+                return;
+            }
+            panel.classList.remove('rtl-open');
+        };
+
+        window.addEventListener('pointerdown', closePanelOnOutside, { capture: true });
+        window.addEventListener('mousedown', closePanelOnOutside, { capture: true });
+        window.addEventListener('click', closePanelOnOutside, { capture: true });
+        window.addEventListener('blur', () => {
+            if (panel?.classList.contains('rtl-open')) {
                 panel.classList.remove('rtl-open');
             }
         });
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && panel?.classList.contains('rtl-open')) {
+                panel.classList.remove('rtl-open');
+            }
+        }, { capture: true });
 
         function persist() {
             config.faFont = faFontInput?.value.trim() || '';

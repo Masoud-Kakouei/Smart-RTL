@@ -415,11 +415,10 @@ export function generateBiDiCSS(options = {}) {
             unicode-bidi: isolate !important;
         }
 
-        /* Code blocks & Monaco Editor (STRICT LTR & Monospace Font) */
+        /* Code blocks (STRICT LTR & Monospace Font) */
         pre, code, pre *, code *,
         .font-mono, .font-mono *,
-        textarea.font-mono,
-        .monaco-editor, .monaco-editor * {
+        textarea.font-mono {
             unicode-bidi: isolate !important;
             direction: ltr !important;
             text-align: left !important;
