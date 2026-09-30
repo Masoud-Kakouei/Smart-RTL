@@ -63,7 +63,7 @@ export class WidgetAnchor {
         if (!titlebarRight) return null;
 
         // Position immediately before layout controls (.action-toolbar-container)
-        const actionToolbar = titlebarRight.querySelector('.action-toolbar-container, .monaco-toolbar');
+        const actionToolbar = titlebarRight.querySelector('.action-toolbar-container');
         if (actionToolbar) {
             return { container: actionToolbar, isInsideActionToolbar: true };
         }
@@ -102,13 +102,13 @@ export class WidgetAnchor {
             this.widget.classList.remove('rtl-floating');
             container.insertBefore(this.widget, before);
         } else {
-            if (this.widget.parentElement === container) {
+            if (this.widget.parentElement === container && container.lastElementChild === this.widget) {
                 this.currentLocation = 'titlebar';
                 this.widget.classList.remove('rtl-floating');
                 return;
             }
             this.widget.classList.remove('rtl-floating');
-            container.prepend(this.widget);
+            container.appendChild(this.widget);
         }
         this.currentLocation = 'titlebar';
     }

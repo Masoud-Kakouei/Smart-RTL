@@ -1128,7 +1128,7 @@ function buildClientPayload(options = {}) {
             '.part.titlebar .titlebar-right, #workbench\\.parts\\.titlebar .titlebar-right, .titlebar-container .titlebar-right, .titlebar-right'
         );
         if (titlebarRight) {
-            const actionToolbar = titlebarRight.querySelector('.action-toolbar-container, .monaco-toolbar');
+            const actionToolbar = titlebarRight.querySelector('.action-toolbar-container');
             if (actionToolbar) {
                 if (widget.parentElement !== actionToolbar || actionToolbar.firstElementChild !== widget) {
                     widget.classList.remove('rtl-floating');
@@ -1150,7 +1150,7 @@ function buildClientPayload(options = {}) {
 
             if (widget.parentElement !== titlebarRight) {
                 widget.classList.remove('rtl-floating');
-                titlebarRight.prepend(widget);
+                titlebarRight.appendChild(widget);
                 currentLocation = 'titlebar';
             }
             return;
