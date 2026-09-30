@@ -261,11 +261,6 @@ function buildClientPayload(options = {}) {
                 font-family: \${faFontName}, \${enFontStr};
             }
 
-            .codicon, [class*="codicon-"], [class*="codicon"], .codicon:before, [class*="codicon-"]:before, [class*="codicon"]:before,
-            .monaco-tree-twistie, .monaco-tree-twistie:before {
-                font-family: codicon !important;
-            }
-
             .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab .tab-label,
             .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab .label-name,
             .monaco-workbench .part.editor > .content .editor-group-container > .title .title-label,

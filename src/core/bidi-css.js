@@ -163,18 +163,6 @@ export function generateBiDiCSS(options = {}) {
             font-family: ${faFontName}, ${enFontStr};
         }
 
-        /* Preserve all VS Code & Extension Codicons strictly */
-        .codicon,
-        [class*="codicon-"],
-        [class*="codicon"],
-        .codicon:before,
-        [class*="codicon-"]:before,
-        [class*="codicon"]:before,
-        .monaco-tree-twistie,
-        .monaco-tree-twistie:before {
-            font-family: codicon !important;
-        }
-
         /* Uniform tab typography across all editors and settings */
         .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab .tab-label,
         .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab .tab-label a,
