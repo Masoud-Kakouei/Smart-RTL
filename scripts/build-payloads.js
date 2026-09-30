@@ -1229,11 +1229,22 @@ function buildClientPayload(options = {}) {
         document.querySelectorAll('iframe, webview').forEach(frame => {
             try {
                 const doc = frame.contentDocument;
-                if (doc && doc.head && !doc.getElementById('smart-rtl-style')) {
-                    loadFontFaceDirectly(doc);
-                    injectWidgetStyles(doc);
-                    updateDynamicCSS(doc);
-                    updateDOMDirection(doc);
+                if (doc) {
+                    if (!doc.__smart_rtl_outside_click__) {
+                        doc.__smart_rtl_outside_click__ = true;
+                        doc.addEventListener('pointerdown', () => {
+                            const p = document.getElementById('smart-rtl-panel');
+                            if (p && p.classList.contains('rtl-open')) {
+                                p.classList.remove('rtl-open');
+                            }
+                        }, { capture: true });
+                    }
+                    if (doc.head && !doc.getElementById('smart-rtl-style')) {
+                        loadFontFaceDirectly(doc);
+                        injectWidgetStyles(doc);
+                        updateDynamicCSS(doc);
+                        updateDOMDirection(doc);
+                    }
                 }
             } catch (e) { }
         });

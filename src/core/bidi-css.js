@@ -207,8 +207,6 @@ export function generateBiDiCSS(options = {}) {
         [data-testid="user-input-step"] *:not(pre):not(code):not(.font-mono):not(.monaco-editor *):not(.codicon):not([class*="codicon"]):not([class*="codicon"] *),
         [contenteditable="true"],
         [contenteditable="true"] *:not(pre):not(code):not(.font-mono):not(.monaco-editor *):not(.codicon):not([class*="codicon"]):not([class*="codicon"] *),
-        .monaco-editor-pane,
-        .monaco-editor-pane *:not(pre):not(code):not(.font-mono):not(.monaco-editor *):not(.codicon):not([class*="codicon"]):not([class*="codicon"] *),
         .cline-messages-container,
         .cline-messages-container *:not(pre):not(code):not(.font-mono):not(.monaco-editor *):not(.codicon):not([class*="codicon"]):not([class*="codicon"] *),
         .continue-chat,
