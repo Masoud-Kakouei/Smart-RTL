@@ -48,6 +48,16 @@ export function injectWidgetStyles(doc = document) {
             overflow: visible !important;
         }
 
+        /* Titlebar Alignment - anchor next to layout controls */
+        .monaco-workbench .part.titlebar .titlebar-right > .rtl-header-wrap,
+        .titlebar-right > .rtl-header-wrap {
+            margin-left: auto !important;
+        }
+        .monaco-workbench .part.titlebar .titlebar-right > .rtl-header-wrap + .action-toolbar-container,
+        .titlebar-right > .rtl-header-wrap + .action-toolbar-container {
+            margin-left: 0 !important;
+        }
+
         /* RTL Header Button Wrapper */
         .rtl-header-wrap {
             position: relative !important;

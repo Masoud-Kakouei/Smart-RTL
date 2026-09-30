@@ -14,7 +14,7 @@ import picocolors from 'picocolors';
 import ora from 'ora';
 import prompts from 'prompts';
 
-import { detectAllTargets, getAntigravityIDEPath, getVSCodePath, getAntigravityChatPath } from '../src/utils/path-resolver.js';
+import { detectAllTargets, getAntigravityIDEPath, getVSCodePath, getAllVSCodePaths, getAntigravityChatPath } from '../src/utils/path-resolver.js';
 import { patchHTMLFile, restoreHTMLFile } from '../src/injectors/electron-html.js';
 import { patchAsar, restoreAsar } from '../src/injectors/electron-asar.js';
 import { patchVSCode, restoreVSCode } from '../src/injectors/vscode-extension.js';
@@ -165,11 +165,12 @@ async function patchAntigravityIDE(idePath) {
 
 async function patchVSCodeTarget(vscodePath) {
     const spinner = ora('Checking VS Code & Extensions...').start();
+    const paths = Array.isArray(vscodePath) ? vscodePath : (vscodePath ? [vscodePath] : []);
 
     if (isRestore) {
         spinner.text = 'Restoring VS Code & Extensions backup...';
         try {
-            const restored = restoreVSCode(vscodePath);
+            const restored = restoreVSCode(paths);
             spinner.succeed('Successfully restored original VS Code & Extensions!');
             if (restored.length > 0) {
                 console.log(cyan('\n  Restored Extensions: ' + restored.join(', ')));
@@ -184,7 +185,7 @@ async function patchVSCodeTarget(vscodePath) {
 
     spinner.text = 'Deploying Smart RTL to VS Code & AI Extensions...';
     try {
-        const result = patchVSCode(vscodePath, vscodePayloadPath, fontSourcePath);
+        const result = patchVSCode(paths, vscodePayloadPath, fontSourcePath);
         spinner.succeed('Successfully patched VS Code & Extensions!');
         console.log(green('\n✨ Smart RTL is now active in:'));
         if (result.extensions && result.extensions.length > 0) {
@@ -193,9 +194,9 @@ async function patchVSCodeTarget(vscodePath) {
             });
         }
         if (result.workbench) {
-            console.log(cyan('  • VS Code Workbench (Tabs, inputs, dialogs)'));
+            console.log(cyan('  • VS Code Workbench (Titlebar, Tabs, inputs, dialogs)'));
         }
-        console.log(yellow('🔄 Please close and reopen the extension tab or restart VS Code.\n'));
+        console.log(yellow('🔄 Please reload window (Developer: Reload Window) or restart VS Code.\n'));
         return true;
     } catch (e) {
         spinner.fail('Failed to patch VS Code: ' + e.message);
@@ -363,7 +364,7 @@ async function main() {
         const p = targetPath || getAntigravityIDEPath();
         await patchAntigravityIDE(p);
     } else if (target === 'vscode') {
-        const p = targetPath || getVSCodePath();
+        const p = targetPath ? [targetPath] : getAllVSCodePaths();
         await patchVSCodeTarget(p);
     } else if (target === 'antigravity-chat') {
         const p = targetPath || getAntigravityChatPath();
@@ -375,10 +376,10 @@ async function main() {
             await patchAntigravityIDE(agIde);
         }
 
-        const vscode = getVSCodePath();
-        if (fs.existsSync(vscode)) {
+        const vscodePaths = getAllVSCodePaths();
+        if (vscodePaths.length > 0) {
             console.log(bold('\n── 2. Patching Visual Studio Code ──\n'));
-            await patchVSCodeTarget(vscode);
+            await patchVSCodeTarget(vscodePaths);
         }
 
         const chat = getAntigravityChatPath();

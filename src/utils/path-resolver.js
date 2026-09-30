@@ -30,18 +30,21 @@ export function getAntigravityChatPath() {
     return path.join(os.homedir(), '.local', 'share', 'Antigravity', 'resources', 'app.asar');
 }
 
-export function getVSCodePath() {
+export function getAllVSCodePaths() {
     if (os.platform() === 'win32') {
         const candidateRoots = [
-            process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'Programs', 'Microsoft VS Code') : null,
             process.env.ProgramFiles ? path.join(process.env.ProgramFiles, 'Microsoft VS Code') : 'C:\\Program Files\\Microsoft VS Code',
-            process.env['ProgramFiles(x86)'] ? path.join(process.env['ProgramFiles(x86)'], 'Microsoft VS Code') : null
+            process.env['ProgramFiles(x86)'] ? path.join(process.env['ProgramFiles(x86)'], 'Microsoft VS Code') : null,
+            process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'Programs', 'Microsoft VS Code') : null,
         ].filter(Boolean);
 
+        const found = [];
         for (const root of candidateRoots) {
             if (!fs.existsSync(root)) continue;
             const direct = path.join(root, 'resources', 'app');
-            if (fs.existsSync(direct)) return direct;
+            if (fs.existsSync(direct) && fs.existsSync(path.join(direct, 'out'))) {
+                if (!found.includes(direct)) found.push(direct);
+            }
 
             try {
                 const entries = fs.readdirSync(root, { withFileTypes: true });
@@ -49,22 +52,25 @@ export function getVSCodePath() {
                     if (entry.isDirectory() && entry.name !== 'bin') {
                         const subApp = path.join(root, entry.name, 'resources', 'app');
                         if (fs.existsSync(subApp) && fs.existsSync(path.join(subApp, 'out'))) {
-                            return subApp;
+                            if (!found.includes(subApp)) found.push(subApp);
                         }
                     }
                 }
             } catch (e) { }
         }
-
-        const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
-        return path.join(localAppData, 'Programs', 'Microsoft VS Code', 'resources', 'app');
+        return found;
     }
     if (os.platform() === 'darwin') {
-        return '/Applications/Visual Studio Code.app/Contents/Resources/app';
+        return ['/Applications/Visual Studio Code.app/Contents/Resources/app'];
     }
     const linuxDefault = '/usr/share/code/resources/app';
-    if (fs.existsSync(linuxDefault)) return linuxDefault;
-    return path.join(os.homedir(), '.local', 'share', 'code', 'resources', 'app');
+    if (fs.existsSync(linuxDefault)) return [linuxDefault];
+    return [path.join(os.homedir(), '.local', 'share', 'code', 'resources', 'app')];
+}
+
+export function getVSCodePath() {
+    const all = getAllVSCodePaths();
+    return all.length > 0 ? all[0] : null;
 }
 
 
@@ -120,17 +126,18 @@ export function detectAllTargets() {
     }
 
     // 2. VS Code
-    const vscodePath = getVSCodePath();
-    const vscodeInstalled = fs.existsSync(vscodePath);
+    const vscodePaths = getAllVSCodePaths();
     const extensions = detectInstalledExtensions();
 
-    if (vscodeInstalled) {
+    for (let i = 0; i < vscodePaths.length; i++) {
+        const vPath = vscodePaths[i];
+        const isProg = vPath.includes('Program Files');
         results.push({
             id: 'vscode',
-            title: 'Visual Studio Code',
-            path: vscodePath,
+            title: `Visual Studio Code${vscodePaths.length > 1 ? (isProg ? ' (System)' : ' (User)') : ''}`,
+            path: vPath,
             type: 'vscode',
-            extensions
+            extensions: i === 0 ? extensions : []
         });
     }
 

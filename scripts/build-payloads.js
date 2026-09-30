@@ -453,6 +453,16 @@ function buildClientPayload(options = {}) {
                 overflow: visible !important;
             }
 
+            /* Titlebar Alignment - anchor next to layout controls */
+            .monaco-workbench .part.titlebar .titlebar-right > .rtl-header-wrap,
+            .titlebar-right > .rtl-header-wrap {
+                margin-left: auto !important;
+            }
+            .monaco-workbench .part.titlebar .titlebar-right > .rtl-header-wrap + .action-toolbar-container,
+            .titlebar-right > .rtl-header-wrap + .action-toolbar-container {
+                margin-left: 0 !important;
+            }
+
             .rtl-header-wrap {
                 position: relative !important;
                 display: inline-flex !important;
@@ -1120,9 +1130,9 @@ function buildClientPayload(options = {}) {
         if (titlebarRight) {
             const actionToolbar = titlebarRight.querySelector('.action-toolbar-container, .monaco-toolbar');
             if (actionToolbar) {
-                if (widget.parentElement !== titlebarRight || widget.nextElementSibling !== actionToolbar) {
+                if (widget.parentElement !== actionToolbar || actionToolbar.firstElementChild !== widget) {
                     widget.classList.remove('rtl-floating');
-                    titlebarRight.insertBefore(widget, actionToolbar);
+                    actionToolbar.prepend(widget);
                     currentLocation = 'titlebar';
                 }
                 return;
@@ -1171,7 +1181,15 @@ function buildClientPayload(options = {}) {
             }
         }
 
-        // Stage 3: Corner floating fallback
+        // Check if inside iframe/webview: do not float in the corner
+        const isInsideIframe = () => {
+            try { return window.self !== window.top; } catch(e) { return true; }
+        };
+        if (isInsideIframe()) {
+            return;
+        }
+
+        // Stage 3: Corner floating fallback (only for standalone top-level windows)
         if (currentLocation !== 'floating' || !document.body.contains(widget)) {
             widget.classList.add('rtl-floating');
             document.body.appendChild(widget);

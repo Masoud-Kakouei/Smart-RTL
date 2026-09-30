@@ -27,7 +27,14 @@ export function updateProductChecksums(appRoot, updatedRelativePaths) {
             const normalizedKey = relPath.replace(/\\/g, '/');
             const absPath = path.join(appRoot, relPath);
             if (fs.existsSync(absPath)) {
-                productData.checksums[normalizedKey] = computeFileChecksum(absPath);
+                const sum = computeFileChecksum(absPath);
+                productData.checksums[normalizedKey] = sum;
+                const withoutOut = normalizedKey.startsWith('out/') ? normalizedKey.substring(4) : null;
+                if (withoutOut) {
+                    productData.checksums[withoutOut] = sum;
+                }
+                const withOut = 'out/' + normalizedKey.replace(/^out\//, '');
+                productData.checksums[withOut] = sum;
                 changed = true;
             }
         }

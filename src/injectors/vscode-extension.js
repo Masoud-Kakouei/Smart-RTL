@@ -41,17 +41,23 @@ export function patchExtensionWebviews(payloadSourcePath) {
         for (const rel of relativeBundlePaths) {
             const bundleFile = path.join(ext.path, rel);
             if (fs.existsSync(bundleFile)) {
-                // Create backup
                 createBackup(bundleFile);
 
-                let content = fs.readFileSync(bundleFile, 'utf8');
-                if (!content.includes('SMART RTL ENGINE')) {
-                    content = payload + '\n;\n' + content;
-                    fs.writeFileSync(bundleFile, content, 'utf8');
-                    patchedExtensions.push(ext.name);
-                } else {
-                    patchedExtensions.push(ext.name + ' (already patched)');
+                const backupPath = bundleFile + '.smart-rtl.backup';
+                let baseContent = fs.existsSync(backupPath) ? fs.readFileSync(backupPath, 'utf8') : fs.readFileSync(bundleFile, 'utf8');
+
+                // If baseContent still has old SMART RTL block, clean it
+                const engineMarker = baseContent.indexOf('/* SMART RTL ENGINE');
+                if (engineMarker !== -1) {
+                    const endMarker = baseContent.indexOf('/* END SMART RTL ENGINE */');
+                    if (endMarker !== -1) {
+                        baseContent = baseContent.substring(endMarker + '/* END SMART RTL ENGINE */'.length).trimStart();
+                    }
                 }
+
+                const newContent = payload + '\n;\n' + baseContent;
+                fs.writeFileSync(bundleFile, newContent, 'utf8');
+                patchedExtensions.push(ext.name);
             }
         }
     }
@@ -82,43 +88,40 @@ export function patchVSCode(vscodeAppPath, payloadSourcePath, fontSourcePath) {
     // 1. Direct Webview Injection into Extensions (Works without Admin permissions!)
     const patchedExts = patchExtensionWebviews(payloadSourcePath);
 
-    // 2. Workbench-level patching (if available and writable)
+    // 2. Workbench-level patching (all detected VS Code installations)
+    const paths = Array.isArray(vscodeAppPath) ? vscodeAppPath : (vscodeAppPath ? [vscodeAppPath] : []);
     let workbenchPatched = false;
-    if (vscodeAppPath) {
-        const workbenchHTMLPath = path.join(vscodeAppPath, VSCODE_FILES.workbenchHTML);
-        const fontDestPath = path.join(vscodeAppPath, VSCODE_FILES.font);
-        const payloadDestPath = path.join(vscodeAppPath, VSCODE_FILES.payload);
+
+    for (const appPath of paths) {
+        const workbenchHTMLPath = path.join(appPath, VSCODE_FILES.workbenchHTML);
+        const fontDestPath = path.join(appPath, VSCODE_FILES.font);
+        const payloadDestPath = path.join(appPath, VSCODE_FILES.payload);
 
         if (fs.existsSync(workbenchHTMLPath)) {
             try {
-                // Check write access
                 fs.accessSync(path.dirname(workbenchHTMLPath), fs.constants.W_OK);
 
-                // Copy font
                 if (fontSourcePath && fs.existsSync(fontSourcePath)) {
                     fs.copyFileSync(fontSourcePath, fontDestPath);
                     const workbenchDir = path.dirname(workbenchHTMLPath);
                     fs.copyFileSync(fontSourcePath, path.join(workbenchDir, 'Vazirmatn-Variable.woff2'));
                 }
 
-                // Copy payload
                 if (payloadSourcePath && fs.existsSync(payloadSourcePath)) {
                     fs.copyFileSync(payloadSourcePath, payloadDestPath);
                     const workbenchDir = path.dirname(workbenchHTMLPath);
                     fs.copyFileSync(payloadSourcePath, path.join(workbenchDir, 'smart-rtl.payload.js'));
                 }
 
-                // Patch workbench.html
                 const relPayloadPath = '../../../../smart-rtl.payload.js';
                 patchHTMLFile(workbenchHTMLPath, relPayloadPath);
 
-                // Update checksums in product.json
-                updateProductChecksums(vscodeAppPath, [
+                updateProductChecksums(appPath, [
                     VSCODE_FILES.workbenchHTML
                 ]);
                 workbenchPatched = true;
             } catch (e) {
-                // Read-only or system path; extensions are already patched directly
+                // Read-only or system path
             }
         }
     }
@@ -130,18 +133,17 @@ export function patchVSCode(vscodeAppPath, payloadSourcePath, fontSourcePath) {
 }
 
 export function restoreVSCode(vscodeAppPath) {
-    // Restore extensions
     const restoredExts = restoreExtensionWebviews();
+    const paths = Array.isArray(vscodeAppPath) ? vscodeAppPath : (vscodeAppPath ? [vscodeAppPath] : []);
 
-    // Restore workbench if it was patched
-    if (vscodeAppPath) {
-        const workbenchHTMLPath = path.join(vscodeAppPath, VSCODE_FILES.workbenchHTML);
+    for (const appPath of paths) {
+        const workbenchHTMLPath = path.join(appPath, VSCODE_FILES.workbenchHTML);
         if (fs.existsSync(workbenchHTMLPath)) {
             try {
                 restoreHTMLFile(workbenchHTMLPath);
 
-                const fontDestPath = path.join(vscodeAppPath, VSCODE_FILES.font);
-                const payloadDestPath = path.join(vscodeAppPath, VSCODE_FILES.payload);
+                const fontDestPath = path.join(appPath, VSCODE_FILES.font);
+                const payloadDestPath = path.join(appPath, VSCODE_FILES.payload);
                 if (fs.existsSync(fontDestPath)) fs.unlinkSync(fontDestPath);
                 if (fs.existsSync(payloadDestPath)) fs.unlinkSync(payloadDestPath);
 
@@ -151,8 +153,7 @@ export function restoreVSCode(vscodeAppPath) {
                 if (fs.existsSync(extraPayload)) fs.unlinkSync(extraPayload);
                 if (fs.existsSync(extraFont)) fs.unlinkSync(extraFont);
 
-                // Restore product.json
-                const productJSONPath = path.join(vscodeAppPath, 'product.json');
+                const productJSONPath = path.join(appPath, 'product.json');
                 restoreBackup(productJSONPath);
             } catch (e) { }
         }

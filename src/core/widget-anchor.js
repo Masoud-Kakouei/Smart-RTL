@@ -44,7 +44,15 @@ export class WidgetAnchor {
             return;
         }
 
-        // Stage 4: Floating corner fallback
+        // Check if inside iframe/webview: do not float over content
+        const isInsideIframe = () => {
+            try { return window.self !== window.top; } catch(e) { return true; }
+        };
+        if (isInsideIframe()) {
+            return;
+        }
+
+        // Stage 4: Floating corner fallback (only for standalone top-level windows)
         this._floatInCorner();
     }
 
@@ -57,7 +65,7 @@ export class WidgetAnchor {
         // Position immediately before layout controls (.action-toolbar-container)
         const actionToolbar = titlebarRight.querySelector('.action-toolbar-container, .monaco-toolbar');
         if (actionToolbar) {
-            return { container: titlebarRight, before: actionToolbar };
+            return { container: actionToolbar, isInsideActionToolbar: true };
         }
 
         // Fallback: Position before window controls (minimize/maximize/close)
@@ -70,8 +78,20 @@ export class WidgetAnchor {
     }
 
     _insertNearTitlebar(anchorInfo) {
-        const { container, before } = anchorInfo;
+        const { container, before, isInsideActionToolbar } = anchorInfo;
         if (!container) return;
+
+        if (isInsideActionToolbar) {
+            if (this.widget.parentElement === container && container.firstElementChild === this.widget) {
+                this.currentLocation = 'titlebar';
+                this.widget.classList.remove('rtl-floating');
+                return;
+            }
+            this.widget.classList.remove('rtl-floating');
+            container.prepend(this.widget);
+            this.currentLocation = 'titlebar';
+            return;
+        }
 
         if (before) {
             if (this.widget.parentElement === container && this.widget.nextElementSibling === before) {
