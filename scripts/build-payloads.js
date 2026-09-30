@@ -20,7 +20,7 @@ if (!fs.existsSync(fontPath)) {
 const fontBase64 = fs.readFileSync(fontPath).toString("base64");
 
 function buildClientPayload(options = {}) {
-  const { targetName = "universal" } = options;
+  const { targetName = "universal", showTypographySliders = (targetName !== "vscode") } = options;
 
   return `/* SMART RTL ENGINE - TARGET: ${targetName.toUpperCase()} */
 (function () {
@@ -286,7 +286,7 @@ function buildClientPayload(options = {}) {
             .cline-messages-container, .continue-chat, .roo-cline-messages {
                 font-family: \${faFontName}, \${enFontStr} !important;
             }
-
+${showTypographySliders ? `
             .prose, [data-testid="chat-message"], .markdown-body, .leading-relaxed, 
             [data-testid="conversation-view"], [contenteditable="true"], [contenteditable="true"] p,
             .cline-messages-container, .continue-chat, .roo-cline-messages {
@@ -299,6 +299,7 @@ function buildClientPayload(options = {}) {
             .cline-messages-container p, .continue-chat p, .roo-cline-messages p {
                 line-height: \${config.lh} !important;
             }
+` : ''}
 
             p, h1, h2, h3, h4, h5, h6, ul, ol {
                 unicode-bidi: plaintext;
@@ -945,6 +946,7 @@ function buildClientPayload(options = {}) {
                   <input id="rtl-codefont-input" type="text" class="rtl-input" placeholder="Default: Monospace" value="\${config.codeFont || ''}">
                 </div>
 
+${showTypographySliders ? `
                 <div class="rtl-row">
                   <span class="rtl-label">Line Height</span>
                   <div class="rtl-slider-wrap">
@@ -960,6 +962,7 @@ function buildClientPayload(options = {}) {
                     <button id="rtl-fs-reset" type="button" class="rtl-icon-btn" title="Reset to 16px">↺</button>
                   </div>
                 </div>
+` : ''}
 
                 <div class="rtl-separator"></div>
 
@@ -1055,8 +1058,8 @@ function buildClientPayload(options = {}) {
             config.faFont = faFontInput?.value.trim() || '';
             config.enFont = enFontInput?.value.trim() || '';
             config.codeFont = codeFontInput?.value.trim() || '';
-            config.lh = lhInput?.value || '1.6';
-            config.fs = fsInput?.value || '16';
+            if (lhInput) config.lh = lhInput.value || '1.6';
+            if (fsInput) config.fs = fsInput.value || '16';
             saveConfig();
             updateDynamicCSS(document);
             updateDOMDirection();

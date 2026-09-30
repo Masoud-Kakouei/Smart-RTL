@@ -263,18 +263,6 @@
                 font-family: ${faFontName}, ${enFontStr} !important;
             }
 
-            .prose, [data-testid="chat-message"], .markdown-body, .leading-relaxed, 
-            [data-testid="conversation-view"], [contenteditable="true"], [contenteditable="true"] p,
-            .cline-messages-container, .continue-chat, .roo-cline-messages {
-                font-size: ${config.fs}px !important;
-            }
-
-            .leading-relaxed, .prose p, .prose li, .markdown-body p, 
-            [data-testid="conversation-view"] p, [data-testid="conversation-view"] li,
-            [data-testid="user-input-step"], [contenteditable="true"], [contenteditable="true"] p,
-            .cline-messages-container p, .continue-chat p, .roo-cline-messages p {
-                line-height: ${config.lh} !important;
-            }
 
             p, h1, h2, h3, h4, h5, h6, ul, ol {
                 unicode-bidi: plaintext;
@@ -921,21 +909,7 @@
                   <input id="rtl-codefont-input" type="text" class="rtl-input" placeholder="Default: Monospace" value="${config.codeFont || ''}">
                 </div>
 
-                <div class="rtl-row">
-                  <span class="rtl-label">Line Height</span>
-                  <div class="rtl-slider-wrap">
-                    <input id="rtl-lh-input" type="range" min="1.2" max="2.5" step="0.1" value="${config.lh || '1.6'}" class="rtl-slider">
-                    <button id="rtl-lh-reset" type="button" class="rtl-icon-btn" title="Reset to 1.6">↺</button>
-                  </div>
-                </div>
 
-                <div class="rtl-row">
-                  <span class="rtl-label">Font Size</span>
-                  <div class="rtl-slider-wrap">
-                    <input id="rtl-fs-input" type="range" min="11" max="22" step="1" value="${config.fs || '16'}" class="rtl-slider">
-                    <button id="rtl-fs-reset" type="button" class="rtl-icon-btn" title="Reset to 16px">↺</button>
-                  </div>
-                </div>
 
                 <div class="rtl-separator"></div>
 
@@ -1031,8 +1005,8 @@
             config.faFont = faFontInput?.value.trim() || '';
             config.enFont = enFontInput?.value.trim() || '';
             config.codeFont = codeFontInput?.value.trim() || '';
-            config.lh = lhInput?.value || '1.6';
-            config.fs = fsInput?.value || '16';
+            if (lhInput) config.lh = lhInput.value || '1.6';
+            if (fsInput) config.fs = fsInput.value || '16';
             saveConfig();
             updateDynamicCSS(document);
             updateDOMDirection();

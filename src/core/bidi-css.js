@@ -11,6 +11,7 @@ export function generateBiDiCSS(options = {}) {
         codeFont = '',
         lh = '1.6',
         fs = '16',
+        showTypography = true,
         forceRTL = false,
         fontBase64 = ''
     } = options;
@@ -204,20 +205,21 @@ export function generateBiDiCSS(options = {}) {
             font-family: ${faFontName}, ${enFontStr} !important;
         }
 
-        /* Configurable Font Size */
+        /* Configurable Font Size & Line Height */
+        ${showTypography ? `
         .prose, [data-testid="chat-message"], .markdown-body, .leading-relaxed, 
         [data-testid="conversation-view"], [contenteditable="true"], [contenteditable="true"] p,
         .cline-messages-container, .continue-chat, .roo-cline-messages {
             font-size: ${fs}px !important;
         }
 
-        /* Configurable Line Height */
         .leading-relaxed, .prose p, .prose li, .markdown-body p, 
         [data-testid="conversation-view"] p, [data-testid="conversation-view"] li,
         [data-testid="user-input-step"], [contenteditable="true"], [contenteditable="true"] p,
         .cline-messages-container p, .continue-chat p, .roo-cline-messages p {
             line-height: ${lh} !important;
         }
+        ` : ''}
 
         /* Natural bidi alignment for paragraphs and headings */
         p, h1, h2, h3, h4, h5, h6, ul, ol {

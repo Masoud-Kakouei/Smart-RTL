@@ -349,7 +349,8 @@ export function injectWidgetStyles(doc = document) {
   doc.head.appendChild(style);
 }
 
-export function buildWidgetElement(config, callbacks = {}) {
+export function buildWidgetElement(config, callbacks = {}, options = {}) {
+  const { showTypographySliders = true } = options;
   const {
     onToggleRTL = () => {},
     onToggleForce = () => {},
@@ -428,6 +429,7 @@ export function buildWidgetElement(config, callbacks = {}) {
               <input id="rtl-codefont-input" type="text" class="rtl-input" placeholder="Default: Monospace" value="${config.codeFont || ""}">
             </div>
 
+            ${showTypographySliders ? `
             <!-- Line Height -->
             <div class="rtl-row">
               <span class="rtl-label">Line Height</span>
@@ -445,6 +447,7 @@ export function buildWidgetElement(config, callbacks = {}) {
                 <button id="rtl-fs-reset" type="button" class="rtl-icon-btn" title="Reset to 16px">↺</button>
               </div>
             </div>
+            ` : ''}
 
             <div class="rtl-separator"></div>
 
@@ -555,13 +558,14 @@ export function buildWidgetElement(config, callbacks = {}) {
 
   // Inputs change
   const triggerConfigUpdate = () => {
-    onConfigChange({
+    const updated = {
       faFont: faFontInput?.value.trim() || "",
       enFont: enFontInput?.value.trim() || "",
       codeFont: codeFontInput?.value.trim() || "",
-      lh: lhInput?.value || "1.6",
-      fs: fsInput?.value || "16",
-    });
+    };
+    if (lhInput) updated.lh = lhInput.value || "1.6";
+    if (fsInput) updated.fs = fsInput.value || "16";
+    onConfigChange(updated);
   };
 
   [faFontInput, enFontInput, codeFontInput].forEach((inp) => {
