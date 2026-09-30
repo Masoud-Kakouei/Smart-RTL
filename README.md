@@ -1,7 +1,7 @@
 # 🌐 Smart RTL
 
 > **موتور هوشمند راست‌چین‌سازی (RTL) و پشتیبانی زبان فارسی برای Antigravity IDE، VS Code (Cline, Continue, Roo Code) و اپلیکیشن‌های مبتنی بر Electron**  
-> *A smart Right-to-Left (BiDi) engine & Persian/Arabic typography patcher for Antigravity IDE, Visual Studio Code (Cline, Continue, Roo Code), and Electron applications.*
+> *A smart Right-to-Left (BiDi) engine & Persian typography patcher for Antigravity IDE, Visual Studio Code (Cline, Continue, Roo Code), and Electron applications.*
 
 ---
 
